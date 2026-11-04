@@ -7,56 +7,74 @@ use Illuminate\Http\Request;
 
 class ProductoController extends Controller
 {
+    // Muestra la vista (la tabla se llena después con AJAX)
     public function index()
     {
-        $productos = Producto::all();
-        return view('productos.productos', compact('productos'));
+        return view('productos.producto');
     }
 
+    // Devuelve todos los productos en JSON para la tabla
+    public function getProduct()
+    {
+        $productos = Producto::all();
+        return response()->json(['productos' => $productos]);
+    }
+
+    // Página aparte "Registrar Producto" (menú lateral)
     public function create()
     {
         return view('productos.create');
     }
 
-    // 
     public function store(Request $request)
     {
         $request->validate([
-            'productos' => 'required',
-            'precio'    => 'required',
-            'categoria' => 'required',
-            'stock'     => 'required',
+            'productos' => 'required|string|max:20',
+            'categoria' => 'required|string|max:30',
+            'precio'    => 'required|numeric',
+            'stock'     => 'required|integer',
         ]);
 
-        Producto::create($request->all());
+        Producto::create($request->only(['productos', 'categoria', 'precio', 'stock']));
 
-        // 
+        // Si viene por AJAX respondemos JSON, si viene del formulario normal redirigimos
         if ($request->ajax()) {
-            return response()->json(['mensaje' => 'Producto ingresado con éxito.']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Producto creado exitosamente.',
+            ]);
         }
 
-        return redirect()->route('productos.index')->with('success', 'Producto ingresado con éxito.');
+        return redirect()->route('productos.index')->with('success', 'Producto creado exitosamente.');
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
-            'productos' => 'required',
+            'productos' => 'required|string|max:20',
+            'categoria' => 'required|string|max:30',
             'precio'    => 'required|numeric',
-            'categoria' => 'required',
             'stock'     => 'required|integer',
         ]);
 
         $producto = Producto::findOrFail($id);
-        $producto->update($request->only(['productos', 'precio', 'categoria', 'stock']));
+        $producto->update($request->only(['productos', 'categoria', 'precio', 'stock']));
 
-        return redirect()->route('productos.index')->with('success', 'Producto actualizado con éxito.');
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Producto actualizado correctamente.',
+            'producto' => $producto,
+        ]);
     }
 
-    public function destroy($id)
+    public function destroy($producto)
     {
-        Producto::findOrFail($id)->delete();
+        $prod = Producto::where('idProductos', $producto)->firstOrFail();
+        $prod->delete();
 
-        return redirect()->route('productos.index')->with('success', 'Producto eliminado con éxito.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto eliminado exitosamente.',
+        ]);
     }
 }

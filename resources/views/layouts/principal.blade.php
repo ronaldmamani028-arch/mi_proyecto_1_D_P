@@ -78,6 +78,9 @@
 <script src="{{ asset('assets/js/off-canvas.js') }}"></script>
 <script src="{{ asset('assets/js/misc.js') }}"></script>
 
+{{-- Scripts propios de cada vista --}}
+@stack('scripts')
+
 <!-- Script global de SweetAlert para mensajes de éxito desde la sesión de Laravel -->
 @if(session('success'))
     <script>
